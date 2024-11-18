@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 
-class TcpTextualClient {
+class Client {
 
     private static final String HOST = "localhost";
     private static final int PORT = 1234;
