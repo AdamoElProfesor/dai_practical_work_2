@@ -1,0 +1,41 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+== Join the server ==
+
+note across :the socket is instanciated and the connection is\n automatically established
+Client1 -> Server: Authentication Request
+Server --> Client1: Authentication Response
+
+
+Client1 -> Server: JOIN axel
+Server -> Client1: OK
+
+Client2 -> Server: Authentication Request
+Server --> Client2: Authentication Response
+
+Client2 -> Server : JOIN adam
+Server -> Client2: OK
+
+== Send a message ==
+
+Client1 -> Server: SEND adam Salut :)
+Server -> Client1: OK
+
+
+== Recieve a message ==
+
+Server -> Client2: RECIEVE axel Salut :)
+
+== Quit ==
+note across: Just as for the connection establishment, no\nformal message is sent to the server when disconnecting\n\nThe socket is closed by the client and the connection\nis automatically closed
+
+Client1 -> Client1: Close the connection
+Client1 <--> Server : The connection is closed
+Server -> Server: Remove axel from users
+
+Client2 -> Client2: Close the connection
+Client2 <--> Server : The connection is closed
+Server -> Server: Remove adam from users
+
+@enduml
