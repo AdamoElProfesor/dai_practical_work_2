@@ -6,4 +6,9 @@ enum ClientCommand{
 
 enum ServerCommand{
     OK,
+    ERROR,
+}
+
+enum ErrorCode{
+    USER_ALREADY_EXISTS;
 }

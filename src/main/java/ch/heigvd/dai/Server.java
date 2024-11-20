@@ -55,6 +55,12 @@ public class Server {
         switch (command) {
             case JOIN -> {
                 String name = userInputSplit[1];
+                if(User.doesNameExistsInUsers(users, name)) {
+                    System.out.println("[Server] Name already exists");
+                    out.write("ERROR " + ErrorCode.USER_ALREADY_EXISTS.ordinal() + END_OF_LINE);
+                    out.flush();
+                    return;
+                }
                 User user = new User(name, socket.getInetAddress().getHostAddress());
                 users.add(user);
                 System.out.println("[Server] New client joined " + name);
@@ -70,7 +76,7 @@ public class Server {
 
 class User{
     private String name;
-    private String address;
+    private String address; // Maybe not useful
 
     public User(String name, String address) {
         this.name = name;
@@ -83,5 +89,14 @@ class User{
 
     public String getAddress() {
         return address;
+    }
+
+    static public boolean doesNameExistsInUsers(ArrayList<User> users, String name) {
+        for (User user : users) {
+            if (user.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
