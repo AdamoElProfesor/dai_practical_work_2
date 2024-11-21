@@ -10,5 +10,6 @@ enum ServerCommand{
 }
 
 enum ErrorCode{
-    USER_ALREADY_EXISTS;
+    INVALID,
+    USER_ALREADY_EXISTS
 }

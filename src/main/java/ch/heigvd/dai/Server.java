@@ -16,7 +16,7 @@ public class Server {
             System.out.println("[Server] Listening on port " + PORT);
 
             while (!serverSocket.isClosed()) {
-                try (Socket socket = serverSocket.accept();
+                try (Socket socket = serverSocket.accept(); // blocking
                      Reader reader = new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8);
                      BufferedReader in = new BufferedReader(reader);
                      Writer writer =
@@ -30,6 +30,15 @@ public class Server {
 
                     while (!socket.isClosed()) {
                         String userInput = in.readLine(); // blocking
+                        if(userInput == null) { // Client disconnected
+                            User.removeUsersFromAddress(users, socket.getInetAddress().getHostAddress());
+                            System.out.println(
+                                    "[Server] Leaving client from "
+                                            + socket.getInetAddress().getHostAddress()
+                                            + ":"
+                                            + socket.getPort());
+                            break;
+                        }
                         processClientInput(userInput, socket, out);
                     }
                 } catch (IOException e) {
@@ -50,6 +59,7 @@ public class Server {
             command = ClientCommand.valueOf(userInputSplit[0]);
         } catch (IllegalArgumentException e) {
             System.out.println("Invalid/unknown command sent by client, ignore.");
+            return;
         }
 
         switch (command) {
@@ -66,9 +76,6 @@ public class Server {
                 System.out.println("[Server] New client joined " + name);
                 out.write("OK" + END_OF_LINE);
                 out.flush();
-            }
-            case null -> {
-                System.out.println("[Server] Invalid command sent by client, ignore.");
             }
         }
     }
@@ -98,5 +105,9 @@ class User{
             }
         }
         return false;
+    }
+
+    static public void removeUsersFromAddress(ArrayList<User> users, String address) {
+        users.removeIf(user -> user.getAddress().equals(address));
     }
 }
