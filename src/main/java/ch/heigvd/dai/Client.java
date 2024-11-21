@@ -92,18 +92,16 @@ class Client {
         }
 
         switch (command){
-            case OK:
-                System.out.println("[Server] " + response);
-                break;
-            case ERROR:
+            case OK, ERROR:
                 System.out.println("[Server] " + response);
                 break;
             case null: // Useless??
-                System.out.println("Invalid/unknown command sent by server, ignore.");
+                System.out.println("Invalid/unknown response sent by server, ignore.");
         }
         return true;
     }
 
     private static void getErrorFromCode(int code) {
+
     }
 }
