@@ -58,12 +58,21 @@ class Client {
             System.out.println("[Client] Invalid command: " + input);
             return false;
         }
+
         String request = null;
 
         switch (command){
             case JOIN:
                 String name = userInputParts[1];
                 request = ClientCommand.JOIN + " " + name;
+                break;
+            case SEND_PRIVATE:
+                String[] splitRecipientAndMessage = userInputParts[1].split(" ");
+                if(splitRecipientAndMessage.length != 2){return false;}
+                String recipient = userInputParts[1].split(" ", 2)[0];
+                String content = userInputParts[1].split(" ", 2)[1];
+
+                request = ClientCommand.SEND_PRIVATE + " " + recipient + " " + content;
                 break;
         }
 

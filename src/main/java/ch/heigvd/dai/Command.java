@@ -2,6 +2,7 @@ package ch.heigvd.dai;
 
 enum ClientCommand{
     JOIN,
+    SEND_PRIVATE
 }
 
 enum ServerCommand{
@@ -11,5 +12,6 @@ enum ServerCommand{
 
 enum ErrorCode{
     INVALID,
-    USER_ALREADY_EXISTS
+    USER_ALREADY_EXISTS,
+    USER_NOT_FOUND,
 }
