@@ -19,13 +19,13 @@ Server -> Client2: OK
 
 == Send a message ==
 
-Client1 -> Server: SEND adam Salut :)
+Client1 -> Server: SEND_PRIVATE adam Salut :)
 Server -> Client1: OK
 
 
-== Recieve a message ==
+== Receive a message ==
 
-Server -> Client2: RECIEVE axel Salut :)
+Server -> Client2: RECEIVE_PRIVATE axel Salut :)
 
 == Quit ==
 note across: Just as for the connection establishment, no\nformal message is sent to the server when disconnecting\n\nThe socket is closed by the client and the connection\nis automatically closed
