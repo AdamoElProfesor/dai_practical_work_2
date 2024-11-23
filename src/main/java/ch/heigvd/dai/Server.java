@@ -3,11 +3,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Server {
     private static final int PORT = 1234;
-    private static ArrayList<User> users = new ArrayList<>();
+    private static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>();
 
     public static String END_OF_LINE = "\n";
 
@@ -16,40 +16,54 @@ public class Server {
             System.out.println("[Server] Listening on port " + PORT);
 
             while (!serverSocket.isClosed()) {
-                try (Socket socket = serverSocket.accept(); // blocking
-                     Reader reader = new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8);
-                     BufferedReader in = new BufferedReader(reader);
-                     Writer writer =
-                             new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8);
-                     BufferedWriter out = new BufferedWriter(writer)) {
-                    System.out.println(
-                            "[Server] New client connected from "
-                                    + socket.getInetAddress().getHostAddress()
-                                    + ":"
-                                    + socket.getPort());
-
-                    while (!socket.isClosed()) {
-                        String userInput = in.readLine(); // blocking
-                        if(userInput == null) { // Client disconnected
-                            User.removeUsersFromAddress(users, socket.getInetAddress().getHostAddress());
-                            System.out.println(
-                                    "[Server] Leaving client from "
-                                            + socket.getInetAddress().getHostAddress()
-                                            + ":"
-                                            + socket.getPort());
-                            break;
-                        }
-                        processClientInput(userInput, socket, out);
-                    }
-                } catch (IOException e) {
-                    System.out.println("[Server] IO exception: " + e);
-                }
+                Socket socket = serverSocket.accept(); // blocking
+                Thread clientThread = new Thread(new ClientHandler(socket));
+                clientThread.start();
             }
             System.out.println("[Server] Closing connection");
         } catch (IOException e) {
             System.out.println("[Server] IO exception: " + e);
         }
     }
+
+    static class ClientHandler implements Runnable {
+
+        private final Socket socket;
+
+        public ClientHandler(Socket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void run() {
+            try (socket; // This allow to use try-with-resources with the socket
+                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+                 BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))){
+                System.out.println(
+                        "[Server] New client connected from "
+                                + socket.getInetAddress().getHostAddress()
+                                + ":"
+                                + socket.getPort());
+
+                while (!socket.isClosed()) {
+                    String userInput = in.readLine(); // blocking
+                    if(userInput == null) { // Client disconnected
+                        User.removeUsersFromAddress(users, socket.getInetAddress().getHostAddress());
+                        System.out.println(
+                                "[Server] Leaving client from "
+                                        + socket.getInetAddress().getHostAddress()
+                                        + ":"
+                                        + socket.getPort());
+                        break;
+                    }
+                    processClientInput(userInput, socket, out);
+                }
+            } catch (IOException e) {
+                System.out.println("[Server] exception: " + e);
+            }
+        }
+    }
+
 
     private static void processClientInput(String input, Socket socket, BufferedWriter out) throws IOException {
         String[] userInputSplit = input.split(" ", 2);
@@ -117,7 +131,7 @@ class User{
         return address;
     }
 
-    static public boolean doesNameExistsInUsers(ArrayList<User> users, String name) {
+    static public boolean doesNameExistsInUsers(CopyOnWriteArrayList<User> users, String name) {
         for (User user : users) {
             if (user.getName().equals(name)) {
                 return true;
@@ -126,7 +140,7 @@ class User{
         return false;
     }
 
-    static public void removeUsersFromAddress(ArrayList<User> users, String address) {
+    static public void removeUsersFromAddress(CopyOnWriteArrayList<User> users, String address) {
         users.removeIf(user -> user.getAddress().equals(address));
     }
 }
