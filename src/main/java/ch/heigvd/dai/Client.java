@@ -67,7 +67,10 @@ class Client {
                 break;
             case SEND_PRIVATE:
                 String[] splitRecipientAndMessage = userInputParts[1].split(" ");
-                if(splitRecipientAndMessage.length != 2){return false;}
+                if(splitRecipientAndMessage.length < 2){
+                    System.out.println("[Client] Invalid recipient: " + splitRecipientAndMessage.length);
+                    return false;
+                }
                 String recipient = userInputParts[1].split(" ", 2)[0];
                 String content = userInputParts[1].split(" ", 2)[1];
 
@@ -97,20 +100,26 @@ class Client {
             command = ServerCommand.valueOf(responseSplit[0]);
         } catch (Exception e){
             System.out.println("[Server] Unknown response: " + responseSplit[0]);
+            return false;
         }
 
         switch (command){
             case OK, ERROR:
                 System.out.println("[Server] " + response);
                 break;
-            case null: // Useless??
-                System.out.println("Invalid/unknown response sent by server, ignore.");
+            case RECEIVE_PRIVATE:
+                String[] splitSenderAndMessage = responseSplit[1].split(" ", 2);
+                if(splitSenderAndMessage.length < 2){return false;}
+                String sender = splitSenderAndMessage[0];
+                String message = splitSenderAndMessage[1];
+                System.out.println("[" + sender +  "] " + message);
+                break;
         }
+        System.out.print("> ");
         return true;
     }
 
     private static void getErrorFromCode(int code) {
-
     }
 
     static class ServerListener implements Runnable {
@@ -121,7 +130,6 @@ class Client {
 
         @Override
         public void run() {
-            // Logic to handle server responses
             try {
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
                 String response;
