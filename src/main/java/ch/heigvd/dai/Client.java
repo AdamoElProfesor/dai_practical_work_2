@@ -23,21 +23,20 @@ class Client {
 
             System.out.println("[Client] Connected to " + HOST + ":" + PORT);
 
+            //Process server responses
+            Thread serverListener = new Thread(new ServerListener(socket));
+            serverListener.start();
+
             while (!socket.isClosed()) {
                 System.out.print("> ");
 
                 // Read user input
                 Reader inputReader = new InputStreamReader(System.in, StandardCharsets.UTF_8);
                 BufferedReader bir = new BufferedReader(inputReader);
+
+
                 String userInput = bir.readLine(); // blocking
-
-                if (!processClientInput(userInput, out)) continue;
-
-                // Reads server response
-                String response = in.readLine(); // blocking
-
-
-                if(!processServerResponse(response, socket)) continue;
+                processClientInput(userInput, out);
 
             }
             System.out.println("[Client] Closing connection and quitting...");
@@ -113,4 +112,28 @@ class Client {
     private static void getErrorFromCode(int code) {
 
     }
+
+    static class ServerListener implements Runnable {
+        private Socket socket;
+        public ServerListener(Socket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void run() {
+            // Logic to handle server responses
+            try {
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+                String response;
+                while ((response = in.readLine()) != null) {
+                    if (!processServerResponse(response, socket)) {
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("[ServerListener] Error reading from socket: " + e.getMessage());
+            }
+        }
+    }
 }
+
