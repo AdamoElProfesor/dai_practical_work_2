@@ -36,7 +36,7 @@ public class Server {
 
         @Override
         public void run() {
-            try (socket; // This allow to use try-with-resources with the socket
+            try (socket; // This allows to use try-with-resources with the socket
                  BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
                  BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))){
                 System.out.println(
@@ -48,7 +48,7 @@ public class Server {
                 while (!socket.isClosed()) {
                     String userInput = in.readLine(); // blocking
                     if(userInput == null) { // Client disconnected
-                        User.removeUsersFromAddress(users, socket.getInetAddress().getHostAddress());
+                        User.removeUserFromAddress(users, socket.getInetAddress().getHostAddress());
                         System.out.println(
                                 "[Server] Leaving client from "
                                         + socket.getInetAddress().getHostAddress()
@@ -84,7 +84,7 @@ public class Server {
                     sendErrorResponse(out, ErrorCode.USER_ALREADY_EXISTS);
                     return;
                 }
-                User user = new User(name, socket.getInetAddress().getHostAddress(), out);
+                User user = new User(name, socket.getInetAddress().getHostAddress() + ":" + socket.getPort(), out);
                 users.add(user);
                 System.out.println("[Server] New client joined " + name);
                 sendOkResponse(out);
@@ -97,7 +97,22 @@ public class Server {
                     sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
                     return;
                 }
+                int index = User.findUserIndexByName(users, recipient);
+                User sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                if(sender == null){
+                    System.out.println("[Server] User is not connected or doesn't exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                    return;
+                }
+                if(index == -1) { // User is not found
+                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                    return;
+                }
+                User user = users.get(index);
+                user.getOutput().write("RECEIVE_PRIVATE " + sender.getName() + " " + content + END_OF_LINE);
+                user.getOutput().flush();
                 sendOkResponse(out);
+                break;
             }
         }
     }
@@ -131,6 +146,10 @@ class User{
         return address;
     }
 
+    public BufferedWriter getOutput() {
+        return output;
+    }
+
     static public boolean doesNameExistsInUsers(CopyOnWriteArrayList<User> users, String name) {
         for (User user : users) {
             if (user.getName().equals(name)) {
@@ -140,7 +159,25 @@ class User{
         return false;
     }
 
-    static public void removeUsersFromAddress(CopyOnWriteArrayList<User> users, String address) {
+    static public void removeUserFromAddress(CopyOnWriteArrayList<User> users, String address) {
         users.removeIf(user -> user.getAddress().equals(address));
+    }
+
+    /* returns -1 when user is not found*/
+    static public int findUserIndexByName(CopyOnWriteArrayList<User> users, String name) {
+        for (User user : users) {
+            if (user.getName().equals(name)) {
+                return users.indexOf(user);
+            }
+        }
+        return -1;
+    }
+    static public User findUserByAddress(CopyOnWriteArrayList<User> users, String address) {
+        for (User user : users) {
+            if (user.getAddress().equals(address)) {
+                return user;
+            }
+        }
+        return null;
     }
 }

@@ -23,21 +23,20 @@ class Client {
 
             System.out.println("[Client] Connected to " + HOST + ":" + PORT);
 
+            //Process server responses
+            Thread serverListener = new Thread(new ServerListener(socket));
+            serverListener.start();
+
             while (!socket.isClosed()) {
                 System.out.print("> ");
 
                 // Read user input
                 Reader inputReader = new InputStreamReader(System.in, StandardCharsets.UTF_8);
                 BufferedReader bir = new BufferedReader(inputReader);
+
+
                 String userInput = bir.readLine(); // blocking
-
-                if (!processClientInput(userInput, out)) continue;
-
-                // Reads server response
-                String response = in.readLine(); // blocking
-
-
-                if(!processServerResponse(response, socket)) continue;
+                processClientInput(userInput, out);
 
             }
             System.out.println("[Client] Closing connection and quitting...");
@@ -68,7 +67,10 @@ class Client {
                 break;
             case SEND_PRIVATE:
                 String[] splitRecipientAndMessage = userInputParts[1].split(" ");
-                if(splitRecipientAndMessage.length != 2){return false;}
+                if(splitRecipientAndMessage.length < 2){
+                    System.out.println("[Client] Invalid recipient: " + splitRecipientAndMessage.length);
+                    return false;
+                }
                 String recipient = userInputParts[1].split(" ", 2)[0];
                 String content = userInputParts[1].split(" ", 2)[1];
 
@@ -98,19 +100,48 @@ class Client {
             command = ServerCommand.valueOf(responseSplit[0]);
         } catch (Exception e){
             System.out.println("[Server] Unknown response: " + responseSplit[0]);
+            return false;
         }
 
         switch (command){
             case OK, ERROR:
                 System.out.println("[Server] " + response);
                 break;
-            case null: // Useless??
-                System.out.println("Invalid/unknown response sent by server, ignore.");
+            case RECEIVE_PRIVATE:
+                String[] splitSenderAndMessage = responseSplit[1].split(" ", 2);
+                if(splitSenderAndMessage.length < 2){return false;}
+                String sender = splitSenderAndMessage[0];
+                String message = splitSenderAndMessage[1];
+                System.out.println("[" + sender +  "] " + message);
+                break;
         }
+        System.out.print("> ");
         return true;
     }
 
     private static void getErrorFromCode(int code) {
+    }
 
+    static class ServerListener implements Runnable {
+        private Socket socket;
+        public ServerListener(Socket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void run() {
+            try {
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+                String response;
+                while ((response = in.readLine()) != null) {
+                    if (!processServerResponse(response, socket)) {
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("[ServerListener] Error reading from socket: " + e.getMessage());
+            }
+        }
     }
 }
+

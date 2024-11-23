@@ -8,6 +8,7 @@ enum ClientCommand{
 enum ServerCommand{
     OK,
     ERROR,
+    RECEIVE_PRIVATE
 }
 
 enum ErrorCode{
