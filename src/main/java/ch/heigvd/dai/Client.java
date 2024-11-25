@@ -76,6 +76,17 @@ class Client {
 
                 request = ClientCommand.SEND_PRIVATE + " " + recipient + " " + content;
                 break;
+            case SEND_GROUP:
+                String[] splitGroupAndMessage = userInputParts[1].split(" ");
+                if(splitGroupAndMessage.length < 2){
+                    System.out.println("[Client] Invalid recipient: " + splitGroupAndMessage.length);
+                    return false;
+                }
+                String group = userInputParts[1].split(" ", 2)[0];
+                String message = userInputParts[1].split(" ", 2)[1];
+
+                request = ClientCommand.SEND_GROUP + " " + group + " " + message;
+                break;
             case PARTICIPATE:
                 String groupName = userInputParts[1];
                 request = ClientCommand.PARTICIPATE + " " + groupName;

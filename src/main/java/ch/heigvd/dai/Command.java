@@ -3,7 +3,9 @@ package ch.heigvd.dai;
 enum ClientCommand{
     JOIN,
     SEND_PRIVATE,
+    SEND_GROUP,
     PARTICIPATE,
+
 }
 
 enum ServerCommand{
