@@ -117,6 +117,23 @@ public class Server {
                 sendOkResponse(out);
                 break;
             }
+            case PARTICIPATE -> {
+                String groupName = userInputSplit[1];
+                User user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                if(user == null){
+                    System.out.println("[Server] User is not connected or doesn't exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                    return;
+                }
+                if (!user.addGroupToUser(groupName)){
+                    System.out.println("[Server] The group name doesn't exist");
+                    sendErrorResponse(out, ErrorCode.GROUP_NOT_FOUND);
+                    return;
+                }
+                System.out.println("[Server] " + user.getName() + " joined " + groupName);
+                sendOkResponse(out);
+                break;
+            }
         }
     }
     private static void sendOkResponse (BufferedWriter out) throws IOException {
