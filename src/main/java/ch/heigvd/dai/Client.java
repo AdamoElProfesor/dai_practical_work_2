@@ -76,6 +76,10 @@ class Client {
 
                 request = ClientCommand.SEND_PRIVATE + " " + recipient + " " + content;
                 break;
+            case PARTICIPATE:
+                String groupName = userInputParts[1];
+                request = ClientCommand.PARTICIPATE + " " + groupName;
+                break;
         }
 
         //Useless condition for the moment
