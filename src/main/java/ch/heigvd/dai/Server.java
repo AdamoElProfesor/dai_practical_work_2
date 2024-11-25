@@ -117,6 +117,30 @@ public class Server {
                 sendOkResponse(out);
                 break;
             }
+            case SEND_GROUP -> {
+                String group = userInputSplit[1].split(" ", 2)[0];
+                String content = userInputSplit[1].split(" ", 2)[1];
+                User sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                if(sender == null){
+                    System.out.println("[Server] User is not connected or doesn't exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                    return;
+                }
+                if (!sender.isInGroup(group)){
+                    System.out.println("[Server] User is not in specified group");
+                    sendErrorResponse(out, ErrorCode.GROUP_NOT_FOUND);
+                    return;
+                }
+                User[] usersToSendMessage = User.findAllUsersByGroup(users, group);
+
+                for(User user : usersToSendMessage){
+                    user.getOutput().write("RECEIVE_GROUP " + group + " " + sender.getName() + " " + content + END_OF_LINE);
+                    user.getOutput().flush();
+
+                }
+                sendOkResponse(out);
+                break;
+            }
             case PARTICIPATE -> {
                 String groupName = userInputSplit[1];
                 User user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
@@ -186,6 +210,20 @@ class User{
         if(!isValidGroupName(group)) return false;
         groups.add(group);
         return true;
+    }
+
+    public boolean isInGroup(String group){
+        return groups.contains(group);
+    }
+
+    static public User[] findAllUsersByGroup(CopyOnWriteArrayList<User> users, String group){
+        CopyOnWriteArrayList<User> usersInGroup = new CopyOnWriteArrayList<>();
+        for (User user : users){
+            if(user.isInGroup(group)){
+                usersInGroup.add(user);
+            }
+        }
+        return usersInGroup.toArray(new User[0]);
     }
 
     static public boolean doesNameExistsInUsers(CopyOnWriteArrayList<User> users, String name) {
