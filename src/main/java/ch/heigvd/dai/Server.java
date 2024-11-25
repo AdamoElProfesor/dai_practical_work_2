@@ -3,12 +3,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+
+
 public class Server {
+
     private static final int PORT = 1234;
     private static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>();
-
     public static String END_OF_LINE = "\n";
 
     public static void main(String[] args) {
@@ -114,6 +117,23 @@ public class Server {
                 sendOkResponse(out);
                 break;
             }
+            case PARTICIPATE -> {
+                String groupName = userInputSplit[1];
+                User user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                if(user == null){
+                    System.out.println("[Server] User is not connected or doesn't exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                    return;
+                }
+                if (!user.addGroupToUser(groupName)){
+                    System.out.println("[Server] The group name doesn't exist");
+                    sendErrorResponse(out, ErrorCode.GROUP_NOT_FOUND);
+                    return;
+                }
+                System.out.println("[Server] " + user.getName() + " joined " + groupName);
+                sendOkResponse(out);
+                break;
+            }
         }
     }
     private static void sendOkResponse (BufferedWriter out) throws IOException {
@@ -127,17 +147,20 @@ public class Server {
     }
 }
 
+
 class User{
     private String name;
     private String address; // Maybe not useful
     private BufferedWriter output;
+    private ArrayList<String> groups;
+    public static final String[] existingGroups = {"HEIG-VD", "Sport", "Voiture"};
 
     public User(String name, String address, BufferedWriter output) {
         this.name = name;
         this.address = address;
         this.output = output;
+        this.groups = new ArrayList<>();
     }
-
     public String getName() {
         return name;
     }
@@ -148,6 +171,21 @@ class User{
 
     public BufferedWriter getOutput() {
         return output;
+    }
+
+    static public boolean isValidGroupName(String group){
+        for (String currentGroup : existingGroups){
+            if(group.equals(currentGroup)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean addGroupToUser(String group){
+        if(!isValidGroupName(group)) return false;
+        groups.add(group);
+        return true;
     }
 
     static public boolean doesNameExistsInUsers(CopyOnWriteArrayList<User> users, String name) {
