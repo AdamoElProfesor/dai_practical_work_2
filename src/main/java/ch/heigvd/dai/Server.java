@@ -112,7 +112,7 @@ public class Server {
                     return;
                 }
                 User user = users.get(index);
-                user.getOutput().write("RECEIVE_PRIVATE " + sender.getName() + " " + content + END_OF_LINE);
+                user.getOutput().write(ServerCommand.RECEIVE_PRIVATE + " " + sender.getName() + " " + content + END_OF_LINE);
                 user.getOutput().flush();
                 sendOkResponse(out);
                 break;
@@ -134,7 +134,8 @@ public class Server {
                 User[] usersToSendMessage = User.findAllUsersByGroup(users, group);
 
                 for(User user : usersToSendMessage){
-                    user.getOutput().write("RECEIVE_GROUP " + group + " " + sender.getName() + " " + content + END_OF_LINE);
+                    if (user == sender) continue;
+                    user.getOutput().write(ServerCommand.RECEIVE_GROUP + " " + group + " " + sender.getName() + " " + content + END_OF_LINE);
                     user.getOutput().flush();
 
                 }
@@ -177,7 +178,7 @@ class User{
     private String address; // Maybe not useful
     private BufferedWriter output;
     private ArrayList<String> groups;
-    public static final String[] existingGroups = {"HEIG-VD", "Sport", "Voiture"};
+    public static final String[] existingGroups = {"HEIG-VD", "SPORT", "VOITURE"};
 
     public User(String name, String address, BufferedWriter output) {
         this.name = name;

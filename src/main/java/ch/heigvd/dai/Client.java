@@ -85,11 +85,11 @@ class Client {
                 String group = userInputParts[1].split(" ", 2)[0];
                 String message = userInputParts[1].split(" ", 2)[1];
 
-                request = ClientCommand.SEND_GROUP + " " + group + " " + message;
+                request = ClientCommand.SEND_GROUP + " " + group.toUpperCase() + " " + message;
                 break;
             case PARTICIPATE:
                 String groupName = userInputParts[1];
-                request = ClientCommand.PARTICIPATE + " " + groupName;
+                request = ClientCommand.PARTICIPATE + " " + groupName.toUpperCase();
                 break;
         }
 
@@ -118,6 +118,9 @@ class Client {
             return false;
         }
 
+        String sender;
+        String message;
+
         switch (command){
             case OK, ERROR:
                 System.out.println("[Server] " + response);
@@ -125,9 +128,17 @@ class Client {
             case RECEIVE_PRIVATE:
                 String[] splitSenderAndMessage = responseSplit[1].split(" ", 2);
                 if(splitSenderAndMessage.length < 2){return false;}
-                String sender = splitSenderAndMessage[0];
-                String message = splitSenderAndMessage[1];
+                sender = splitSenderAndMessage[0];
+                message = splitSenderAndMessage[1];
                 System.out.println("[" + sender +  "] " + message);
+                break;
+            case RECEIVE_GROUP:
+                String[] splitGroupSenderMessage = responseSplit[1].split(" ", 3);
+                if(splitGroupSenderMessage.length < 3){return false;}
+                String group = splitGroupSenderMessage[0];
+                sender = splitGroupSenderMessage[1];
+                message = splitGroupSenderMessage[2];
+                System.out.println("[" + group +  ":" + sender + "] " + message);
                 break;
         }
         System.out.print("> ");
@@ -159,4 +170,3 @@ class Client {
         }
     }
 }
-
