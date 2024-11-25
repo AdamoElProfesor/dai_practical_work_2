@@ -137,8 +137,16 @@ public class Server {
                     if (user == sender) continue;
                     user.getOutput().write(ServerCommand.RECEIVE_GROUP + " " + group + " " + sender.getName() + " " + content + END_OF_LINE);
                     user.getOutput().flush();
-
                 }
+                String filePath = group.toLowerCase() + ".txt";
+
+                try(BufferedWriter groupWriter = new BufferedWriter(new FileWriter(filePath, true))){
+                    groupWriter.write(sender.getName() + " " + content + END_OF_LINE);
+                    groupWriter.flush();
+                }catch (IOException e){
+                    System.out.println("[Server] IO exception: " + e);
+                }
+                System.out.println("OUT");
                 sendOkResponse(out);
                 break;
             }
