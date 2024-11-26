@@ -23,6 +23,6 @@ Server -> Client1: OK
 
 Client1 -> Server: HISTORY group1
 
-Server -> Client1: Adam: Salut \nAxel: ça va?\n...
+Server -> Client1: HISTORY Adam: Salut|Axel: ça va?|...
 
 @enduml
