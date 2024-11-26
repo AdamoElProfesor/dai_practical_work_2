@@ -137,8 +137,16 @@ public class Server {
                     if (user == sender) continue;
                     user.getOutput().write(ServerCommand.RECEIVE_GROUP + " " + group + " " + sender.getName() + " " + content + END_OF_LINE);
                     user.getOutput().flush();
-
                 }
+                String filePath = group.toLowerCase() + ".txt";
+
+                try(BufferedWriter groupWriter = new BufferedWriter(new FileWriter(filePath, true))){
+                    groupWriter.write(sender.getName() + " " + content + END_OF_LINE);
+                    groupWriter.flush();
+                }catch (IOException e){
+                    System.out.println("[Server] IO exception: " + e);
+                }
+                System.out.println("OUT");
                 sendOkResponse(out);
                 break;
             }
@@ -158,6 +166,33 @@ public class Server {
                 System.out.println("[Server] " + user.getName() + " joined " + groupName);
                 sendOkResponse(out);
                 break;
+            }
+            case HISTORY -> {
+                String groupName = userInputSplit[1];
+                User user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                if (user == null) {
+                    System.out.println("[Server] User is not connected or doesn't exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                    return;
+                }
+                if (!user.isInGroup(groupName)) {
+                    System.out.println("[Server] User is not in specified group");
+                    sendErrorResponse(out, ErrorCode.GROUP_NOT_FOUND);
+                }
+                StringBuilder content = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new FileReader(groupName + ".txt"))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if(content.length() > 1){
+                            content.append("|");
+                        }
+                        content.append(line);
+                    }
+                } catch (IOException e) {
+                    System.err.println("An error occurred: " + e.getMessage());
+                }
+                out.write(ServerCommand.HISTORY + " " + content + END_OF_LINE);
+                out.flush();
             }
         }
     }
