@@ -34,7 +34,6 @@ class Client {
                 Reader inputReader = new InputStreamReader(System.in, StandardCharsets.UTF_8);
                 BufferedReader bir = new BufferedReader(inputReader);
 
-
                 String userInput = bir.readLine(); // blocking
                 processClientInput(userInput, out);
 
@@ -91,6 +90,9 @@ class Client {
                 String groupName = userInputParts[1];
                 request = ClientCommand.PARTICIPATE + " " + groupName.toUpperCase();
                 break;
+            case HISTORY:
+                String groupNameHistory = userInputParts[1];
+                request = ClientCommand.HISTORY + " " + groupNameHistory.toUpperCase();
         }
 
         //Useless condition for the moment
@@ -139,6 +141,12 @@ class Client {
                 sender = splitGroupSenderMessage[1];
                 message = splitGroupSenderMessage[2];
                 System.out.println("[" + group +  ":" + sender + "] " + message);
+                break;
+            case HISTORY:
+                String[] messages = responseSplit[1].split("\\|"); // "|" is the message delimiter
+                for (String messageHistory : messages){
+                    System.out.println(" - " + messageHistory);
+                }
                 break;
         }
         System.out.print("> ");

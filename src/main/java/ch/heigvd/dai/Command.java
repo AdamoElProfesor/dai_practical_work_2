@@ -5,13 +5,15 @@ enum ClientCommand{
     SEND_PRIVATE,
     SEND_GROUP,
     PARTICIPATE,
+    HISTORY
 }
 
 enum ServerCommand{
     OK,
     ERROR,
     RECEIVE_PRIVATE,
-    RECEIVE_GROUP
+    RECEIVE_GROUP,
+    HISTORY
 }
 
 enum ErrorCode{
