@@ -194,6 +194,15 @@ public class Server {
                 out.write(ServerCommand.HISTORY + " " + content + END_OF_LINE);
                 out.flush();
             }
+            case LIST_GROUPS -> {
+                String[] groups = User.getExistingGroups();
+                StringBuilder response = new StringBuilder();
+                for (String group : groups) {
+                    response.append(group).append(" ");
+                }
+                out.write(ServerCommand.LIST_GROUPS + " " + response + END_OF_LINE);
+                out.flush();
+            }
         }
     }
     private static void sendOkResponse (BufferedWriter out) throws IOException {
@@ -232,6 +241,8 @@ class User{
     public BufferedWriter getOutput() {
         return output;
     }
+
+    static public String[] getExistingGroups() {return existingGroups; }
 
     static public boolean isValidGroupName(String group){
         for (String currentGroup : existingGroups){
