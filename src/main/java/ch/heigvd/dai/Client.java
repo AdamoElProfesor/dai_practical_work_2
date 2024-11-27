@@ -97,6 +97,9 @@ class Client {
             case LIST_GROUPS:
                 request = ClientCommand.LIST_GROUPS + "";
                 break;
+            case LIST_USERS:
+                request = ClientCommand.LIST_USERS + "";
+                break;
         }
 
         //Useless condition for the moment
@@ -157,6 +160,13 @@ class Client {
                 System.out.println();
                 for (String currentGroup : groups){
                     System.out.println(" - " + currentGroup);
+                }
+                break;
+            case LIST_USERS:
+                String[] users = responseSplit[1].split(" ");
+                System.out.println();
+                for (String currentUser : users){
+                    System.out.println(" - " + currentUser);
                 }
                 break;
         }
