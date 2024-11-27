@@ -93,6 +93,10 @@ class Client {
             case HISTORY:
                 String groupNameHistory = userInputParts[1];
                 request = ClientCommand.HISTORY + " " + groupNameHistory.toUpperCase();
+                break;
+            case LIST_GROUPS:
+                request = ClientCommand.LIST_GROUPS + "";
+                break;
         }
 
         //Useless condition for the moment
@@ -146,6 +150,13 @@ class Client {
                 String[] messages = responseSplit[1].split("\\|"); // "|" is the message delimiter
                 for (String messageHistory : messages){
                     System.out.println(" - " + messageHistory);
+                }
+                break;
+            case LIST_GROUPS:
+                String[] groups = responseSplit[1].split(" ");
+                System.out.println();
+                for (String currentGroup : groups){
+                    System.out.println(" - " + currentGroup);
                 }
                 break;
         }
