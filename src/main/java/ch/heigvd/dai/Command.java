@@ -6,7 +6,8 @@ enum ClientCommand{
     SEND_GROUP,
     PARTICIPATE,
     HISTORY,
-    LIST_GROUPS
+    LIST_GROUPS,
+    LIST_USERS
 }
 
 enum ServerCommand{
@@ -15,7 +16,8 @@ enum ServerCommand{
     RECEIVE_PRIVATE,
     RECEIVE_GROUP,
     HISTORY,
-    LIST_GROUPS
+    LIST_GROUPS,
+    LIST_USERS
 }
 
 enum ErrorCode{

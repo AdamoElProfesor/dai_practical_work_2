@@ -51,7 +51,7 @@ public class Server {
                 while (!socket.isClosed()) {
                     String userInput = in.readLine(); // blocking
                     if(userInput == null) { // Client disconnected
-                        User.removeUserFromAddress(users, socket.getInetAddress().getHostAddress());
+                        User.removeUserFromAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                         System.out.println(
                                 "[Server] Leaving client from "
                                         + socket.getInetAddress().getHostAddress()
@@ -201,6 +201,14 @@ public class Server {
                     response.append(group).append(" ");
                 }
                 out.write(ServerCommand.LIST_GROUPS + " " + response + END_OF_LINE);
+                out.flush();
+            }
+            case LIST_USERS -> {
+                StringBuilder response = new StringBuilder();
+                for (User user : users) {
+                    response.append(user.getName()).append(" ");
+                }
+                out.write(ServerCommand.LIST_USERS + " " + response + END_OF_LINE);
                 out.flush();
             }
         }
