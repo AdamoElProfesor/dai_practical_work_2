@@ -1,0 +1,12 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+== Participate in a group ==
+
+Axel -> Server: PARTICIPATE sport
+Server -> Axel: OK
+
+Adam -> Server: PARTICIPATE sport
+Server -> Adam: OK
+
+@enduml

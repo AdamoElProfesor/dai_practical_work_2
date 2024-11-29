@@ -1,0 +1,7 @@
+@startuml
+Axel -> Server: JOIN axel
+Server -> Axel: OK
+
+Adam -> Server: JOIN axel
+Server -> Adam: ERROR 1
+@enduml

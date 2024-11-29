@@ -1,0 +1,7 @@
+@startuml
+Axel -> Server: JOIN axel
+Server -> Axel: OK
+
+Axel -> Server: INVALID_COMMAND random parameters
+Server -> Axel: ERROR 99
+@enduml

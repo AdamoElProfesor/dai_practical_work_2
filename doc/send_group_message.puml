@@ -1,0 +1,18 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+== List groups ==
+
+Axel -> Server: LIST_GROUPS
+Server -> Axel: LIST_GROUPS HEIG-VD SPORT VOITURE:
+
+== Send a message to a group ==
+
+Axel -> Server: SEND_GROUP Sport Hello group!
+Server -> Axel: OK
+
+== Receive a message from the group ==
+
+Server -> Adam: RECEIVE_GROUP Sport Hello group!
+
+@enduml

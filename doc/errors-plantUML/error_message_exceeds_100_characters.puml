@@ -1,0 +1,7 @@
+@startuml
+Axel -> Server: JOIN axel
+Server -> Axel: OK
+
+Axel -> Server: SEND_PRIVATE adam This message is way too long ... (exceeds 100 chars)
+Server -> Axel: ERROR 2
+@enduml

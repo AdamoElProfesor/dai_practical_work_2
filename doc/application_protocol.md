@@ -22,7 +22,7 @@ Every message is:
     - **If valid**: The client is allowed to join the server.
     - **If invalid**: The server denies access and sends an error message.
 
-### 3. Messaging
+## Messaging
 #### 3.1. Direct Messaging
 - Once connected, the client can send a **text message** to the server specifying the **recipient**.
 - **Server Verification**:
@@ -188,3 +188,38 @@ The client requests a list of all connected users.
 
 **Server Output**
 - `LIST_USERS <user1 name> <user2 name> ...`: A space-separated list of all connected users.
+
+--- 
+
+
+### Unknown commands
+- For unrecognized or invalid commands, the server returns:
+  `ERROR 99`: Unknown command.
+
+## Examples
+
+[![Diagram Image Link](https://tinyurl.com/29h64tsf)](https://tinyurl.com/29h64tsf)<!--![Diagram Image Link](./join_server.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/2afyo59c)](https://tinyurl.com/2afyo59c)<!--![Diagram Image Link](./send_private_message.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/2captm46)](https://tinyurl.com/2captm46)<!--![Diagram Image Link](./participate_group.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/26njd4jo)](https://tinyurl.com/26njd4jo)<!--![Diagram Image Link](./send_group_message.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/25pnqt5r)](https://tinyurl.com/25pnqt5r)<!--![Diagram Image Link](./group_history.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/23jn3vhc)](https://tinyurl.com/23jn3vhc)<!--![Diagram Image Link](./quit_server.puml)-->
+
+### Errors
+
+[![Diagram Image Link](https://tinyurl.com/235ywjgw)](https://tinyurl.com/235ywjgw)<!--![Diagram Image Link](errors-plantUML/error_user_duplicate.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/2asn9v7w)](https://tinyurl.com/2asn9v7w)<!--![Diagram Image Link](errors-plantUML/error_message_exceeds_100_characters.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/2547atvm)](https://tinyurl.com/2547atvm)<!--![Diagram Image Link](errors-plantUML/error_recipient_not_connected.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/269qzfoa)](https://tinyurl.com/269qzfoa)<!--![Diagram Image Link](errors-plantUML/error_no_group_participant.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/24e2cvtg)](https://tinyurl.com/24e2cvtg)<!--![Diagram Image Link](errors-plantUML/error_group_non-existent.puml)-->
+
+[![Diagram Image Link](https://tinyurl.com/2yjkbgfq)](https://tinyurl.com/2yjkbgfq)<!--![Diagram Image Link](errors-plantUML/error_unknown.puml)-->
