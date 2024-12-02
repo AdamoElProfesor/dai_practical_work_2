@@ -1,0 +1,13 @@
+@startuml
+Axel -> Server: JOIN axel
+Server -> Axel: OK
+
+Adam -> Server: JOIN adam
+Server -> Adam: OK
+
+Adam -> Server: PARTICIPATE group1
+Server -> Adam: OK
+
+Axel -> Server: SEND_GROUP group1 Hello group!
+Server -> Axel: ERROR 4
+@enduml

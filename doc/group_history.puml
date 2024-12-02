@@ -1,0 +1,9 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+== View group chat history ==
+note across: The delimiter of the history group chat is "|"
+Axel -> Server: HISTORY group1
+Server -> Axel: HISTORY axel Hey|adam how are you doing?|axel good thanks
+
+@enduml

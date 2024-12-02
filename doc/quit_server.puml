@@ -1,0 +1,16 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+== Quit the server ==
+
+note across: Just as for the connection establishment, no\nformal message is sent to the server when disconnecting
+
+Axel -> Axel: Close the connection
+Axel <--> Server : The connection is closed
+Server -> Server: Remove axel from users
+
+Adam -> Adam: Close the connection
+Adam <--> Server : The connection is closed
+Server -> Server: Remove adam from users
+
+@enduml

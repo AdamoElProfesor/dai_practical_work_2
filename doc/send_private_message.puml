@@ -1,0 +1,17 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+note across :We will start using names directly instead of client1 and client2,\n this allows you to know that they already used the JOIN command
+== List all connected users ==
+Axel -> Server: LIST_USERS
+Server -> Axel: LIST_USERS Axel Adam
+== Send a private message ==
+
+Axel -> Server: SEND_PRIVATE Adam Hey :)
+Server -> Axel: OK
+
+== Receive a private message ==
+
+Server -> Adam: RECEIVE_PRIVATE Axel Hey :)
+
+@enduml

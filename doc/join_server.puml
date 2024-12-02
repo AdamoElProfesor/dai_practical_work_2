@@ -1,0 +1,19 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+== Join the server ==
+
+note across :the socket is instantiated and the connection is\n automatically established
+Client1 -> Server: Authentication Request
+Server --> Client1: Authentication Response
+
+Client1 -> Server: JOIN axel
+Server -> Client1: OK
+
+Client2 -> Server: Authentication Request
+Server --> Client2: Authentication Response
+
+Client2 -> Server: JOIN adam
+Server -> Client2: OK
+
+@enduml

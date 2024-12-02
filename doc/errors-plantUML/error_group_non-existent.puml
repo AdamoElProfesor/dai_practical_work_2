@@ -1,0 +1,7 @@
+@startuml
+Axel -> Server: JOIN axel
+Server -> Axel: OK
+
+Axel -> Server: SEND_GROUP non_existing_group Hello everyone!
+Server -> Axel: ERROR 1
+@enduml
