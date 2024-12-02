@@ -80,12 +80,14 @@ public class Server {
             return;
         }
 
+        int errorCode = 0;
         switch (command) {
             case JOIN -> {
                 String name = userInputSplit[1];
                 if(User.doesNameExistsInUsers(users, name)) {
+                    errorCode = 1;
                     System.out.println("[Server] Name already exists");
-                    sendErrorResponse(out, ErrorCode.USER_ALREADY_EXISTS);
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
                 if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort ()) != null) {
@@ -101,33 +103,35 @@ public class Server {
                 String content = userInputSplit[1].split(" ", 2)[1];
 
                 // Check if sender has a username
-                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                User sender;
+                if((sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
                     System.out.println("[Server] Sender does not exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
+                    errorCode = 3;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
-
 
                 if (content.length() > MESSAGE_MAX_SIZE){
                     System.out.println("[Server] The message sent is too long");
-                    sendErrorResponse(out, ErrorCode.MESSAGE_TOO_LONG);
+                    errorCode = 2;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
 
+                /* This check is redundant with the bottom one ?*/
                 if (!User.doesNameExistsInUsers(users, recipient)){
-                System.out.println("[Server] User is not connected or doesn't exist");
-                sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
-                return;
-                }
-                int index = User.findUserIndexByName(users, recipient);
-                User sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-                if(sender == null){
                     System.out.println("[Server] User is not connected or doesn't exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                    errorCode = 1;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
+
+                /* Could be simplified by returning user ?*/
+                int index = User.findUserIndexByName(users, recipient);
+
                 if(index == -1) { // User is not found
-                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                    errorCode = 1;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
                 User user = users.get(index);
@@ -141,35 +145,35 @@ public class Server {
                 String content = userInputSplit[1].split(" ", 2)[1];
 
                 // Check if sender has a username
-                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                User sender;
+                if((sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
                     System.out.println("[Server] Sender does not exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
-                    return;
-                }
-
-                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
-                    System.out.println("[Server] Sender does not exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
+                    errorCode = 3;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
 
                 if (content.length() > MESSAGE_MAX_SIZE){
                     System.out.println("[Server] The message sent is too long");
-                    sendErrorResponse(out, ErrorCode.MESSAGE_TOO_LONG);
+                    errorCode = 2;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
 
-                User sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-                if(sender == null){
-                    System.out.println("[Server] User is not connected or doesn't exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                if(!User.isValidGroupName(group)) {
+                    System.out.println("[Server] Group doesn't exist");
+                    errorCode = 1;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
+
                 if (!sender.isInGroup(group)){
                     System.out.println("[Server] User is not in specified group");
-                    sendErrorResponse(out, ErrorCode.GROUP_NOT_FOUND);
+                    errorCode = 4;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
+
                 User[] usersToSendMessage = User.findAllUsersByGroup(users, group);
 
                 for(User user : usersToSendMessage){
@@ -193,23 +197,22 @@ public class Server {
                 String groupName = userInputSplit[1];
 
                 // Check if sender has a username
-                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                User user;
+                if((user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
                     System.out.println("[Server] Sender does not exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
+                    errorCode = 2;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
 
-                User user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-                if(user == null){
-                    System.out.println("[Server] User is not connected or doesn't exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                if (!User.isValidGroupName(groupName)) {
+                    System.out.println("[Server] Group doesn't exist");
+                    errorCode = 1;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
-                if (!user.addGroupToUser(groupName)){
-                    System.out.println("[Server] The group name doesn't exist");
-                    sendErrorResponse(out, ErrorCode.GROUP_NOT_FOUND);
-                    return;
-                }
+
+                user.addGroupToUser(groupName);
                 System.out.println("[Server] " + user.getName() + " joined " + groupName);
                 sendOkResponse(out);
                 break;
@@ -218,22 +221,28 @@ public class Server {
                 String groupName = userInputSplit[1];
 
                 // Check if sender has a username
-                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                User user;
+                if((user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
                     System.out.println("[Server] Sender does not exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
+                    errorCode = 2;
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
 
-                User user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-                if (user == null) {
-                    System.out.println("[Server] User is not connected or doesn't exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                if (!User.isValidGroupName(groupName)) {
+                    System.out.println("[Server] Group doesn't exist");
+                    errorCode = 3; // NOT DEFINED IN THE APP PROTOCOL
+                    sendErrorResponse(out, errorCode);
                     return;
                 }
+
                 if (!user.isInGroup(groupName)) {
                     System.out.println("[Server] User is not in specified group");
-                    sendErrorResponse(out, ErrorCode.GROUP_NOT_FOUND);
+                    errorCode = 1;
+                    sendErrorResponse(out, errorCode);
+                    return;
                 }
+
                 StringBuilder content = new StringBuilder();
                 try (BufferedReader reader = new BufferedReader(new FileReader(groupName + ".txt"))) {
                     String line;
@@ -273,8 +282,8 @@ public class Server {
         out.flush();
     }
 
-    private static void sendErrorResponse(BufferedWriter out, ErrorCode code) throws IOException {
-        out.write("ERROR " + code.ordinal() + END_OF_LINE);
+    private static void sendErrorResponse(BufferedWriter out, int code) throws IOException {
+        out.write("ERROR " + code + END_OF_LINE);
         out.flush();
     }
 }
@@ -316,14 +325,12 @@ class User{
         return false;
     }
 
-    public boolean addGroupToUser(String group){
-        if(!isValidGroupName(group)) return false;
-        groups.add(group);
-        return true;
+    public void addGroupToUser(String group){
+        this.groups.add(group);
     }
 
     public boolean isInGroup(String group){
-        return groups.contains(group);
+        return this.groups.contains(group);
     }
 
     static public User[] findAllUsersByGroup(CopyOnWriteArrayList<User> users, String group){

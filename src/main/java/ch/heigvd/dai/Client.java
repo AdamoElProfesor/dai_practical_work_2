@@ -1,5 +1,7 @@
 package ch.heigvd.dai;
 
+import picocli.CommandLine;
+
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -9,6 +11,7 @@ class Client {
     private static final String HOST = "localhost";
     private static final int PORT = 1234;
     public static String END_OF_LINE = "\n";
+    static private ClientCommand lastCommand = null;
 
     public static void main(String[] args) {
         System.out.println("[Client] Connecting to " + HOST + ":" + PORT + "...");
@@ -55,6 +58,8 @@ class Client {
             System.out.println("[Client] Invalid command: " + input);
             return;
         }
+
+        lastCommand = command;
 
         String request = null;
 
@@ -150,9 +155,18 @@ class Client {
         String message;
 
         switch (command){
-            case OK, ERROR:
+            case OK:
                 System.out.println("[Server] " + response);
                 break;
+            case ERROR:
+                ErrorMapping err;
+                if((err = ErrorMapping.findErrorMapping(lastCommand, Integer.parseInt(responseSplit[1])))== null){
+                    System.out.println("[Server] Unknown error code ");
+                    return false;
+                }
+                System.out.println("[Server] " + err.message);
+                break;
+
             case RECEIVE_PRIVATE:
                 String[] splitSenderAndMessage = responseSplit[1].split(" ", 2);
                 if(splitSenderAndMessage.length < 2){return false;}
