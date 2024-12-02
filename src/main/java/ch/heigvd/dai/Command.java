@@ -26,4 +26,5 @@ enum ErrorCode{
     USER_NOT_FOUND,
     GROUP_NOT_FOUND,
     MESSAGE_TOO_LONG,
+    USER_NOT_CONNECTED
 }
