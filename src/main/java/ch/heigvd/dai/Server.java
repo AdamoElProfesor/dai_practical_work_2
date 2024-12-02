@@ -13,6 +13,7 @@ public class Server {
     private static final int PORT = 1234;
     private static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>();
     public static String END_OF_LINE = "\n";
+    public static char MESSAGE_MAX_SIZE = 100;
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -87,6 +88,9 @@ public class Server {
                     sendErrorResponse(out, ErrorCode.USER_ALREADY_EXISTS);
                     return;
                 }
+                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort ()) != null) {
+                    User.removeUserFromAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                }
                 User user = new User(name, socket.getInetAddress().getHostAddress() + ":" + socket.getPort(), out);
                 users.add(user);
                 System.out.println("[Server] New client joined " + name);
@@ -95,10 +99,25 @@ public class Server {
             case SEND_PRIVATE -> {
                 String recipient = userInputSplit[1].split(" ", 2)[0];
                 String content = userInputSplit[1].split(" ", 2)[1];
-                if (!User.doesNameExistsInUsers(users, recipient)){
-                    System.out.println("[Server] User is not connected or doesn't exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+
+                // Check if sender has a username
+                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                    System.out.println("[Server] Sender does not exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
                     return;
+                }
+
+
+                if (content.length() > MESSAGE_MAX_SIZE){
+                    System.out.println("[Server] The message sent is too long");
+                    sendErrorResponse(out, ErrorCode.MESSAGE_TOO_LONG);
+                    return;
+                }
+
+                if (!User.doesNameExistsInUsers(users, recipient)){
+                System.out.println("[Server] User is not connected or doesn't exist");
+                sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                return;
                 }
                 int index = User.findUserIndexByName(users, recipient);
                 User sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
@@ -120,6 +139,26 @@ public class Server {
             case SEND_GROUP -> {
                 String group = userInputSplit[1].split(" ", 2)[0];
                 String content = userInputSplit[1].split(" ", 2)[1];
+
+                // Check if sender has a username
+                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                    System.out.println("[Server] Sender does not exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
+                    return;
+                }
+
+                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                    System.out.println("[Server] Sender does not exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
+                    return;
+                }
+
+                if (content.length() > MESSAGE_MAX_SIZE){
+                    System.out.println("[Server] The message sent is too long");
+                    sendErrorResponse(out, ErrorCode.MESSAGE_TOO_LONG);
+                    return;
+                }
+
                 User sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                 if(sender == null){
                     System.out.println("[Server] User is not connected or doesn't exist");
@@ -152,6 +191,14 @@ public class Server {
             }
             case PARTICIPATE -> {
                 String groupName = userInputSplit[1];
+
+                // Check if sender has a username
+                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                    System.out.println("[Server] Sender does not exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
+                    return;
+                }
+
                 User user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                 if(user == null){
                     System.out.println("[Server] User is not connected or doesn't exist");
@@ -169,6 +216,14 @@ public class Server {
             }
             case HISTORY -> {
                 String groupName = userInputSplit[1];
+
+                // Check if sender has a username
+                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort()) == null){
+                    System.out.println("[Server] Sender does not exist");
+                    sendErrorResponse(out, ErrorCode.USER_NOT_CONNECTED);
+                    return;
+                }
+
                 User user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                 if (user == null) {
                     System.out.println("[Server] User is not connected or doesn't exist");

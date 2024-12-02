@@ -19,7 +19,7 @@ class Client {
              BufferedReader in = new BufferedReader(reader);
 
              Writer writer = new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8);
-             BufferedWriter out = new BufferedWriter(writer); ) {
+             BufferedWriter out = new BufferedWriter(writer)) {
 
             System.out.println("[Client] Connected to " + HOST + ":" + PORT);
 
@@ -46,21 +46,24 @@ class Client {
 
     // Returns true if no errors were found
     // Returns false if the client input was invalid / unknown
-    private static boolean processClientInput(String input, BufferedWriter out) throws IOException {
-
+    private static void processClientInput(String input, BufferedWriter out) throws IOException {
         String[] userInputParts = input.split(" ", 2);
         ClientCommand command = null;
         try{
             command = ClientCommand.valueOf(userInputParts[0].toUpperCase()); // Throws exception if no match
         } catch (Exception e){
             System.out.println("[Client] Invalid command: " + input);
-            return false;
+            return;
         }
 
         String request = null;
 
         switch (command){
             case JOIN:
+                if (userInputParts.length != 2 || userInputParts[1].isEmpty()){
+                    System.out.println("[Client] Error on parameters");
+                    return;
+                }
                 String name = userInputParts[1];
                 request = ClientCommand.JOIN + " " + name;
                 break;
@@ -68,7 +71,7 @@ class Client {
                 String[] splitRecipientAndMessage = userInputParts[1].split(" ");
                 if(splitRecipientAndMessage.length < 2){
                     System.out.println("[Client] Invalid recipient: " + splitRecipientAndMessage.length);
-                    return false;
+                    return;
                 }
                 String recipient = userInputParts[1].split(" ", 2)[0];
                 String content = userInputParts[1].split(" ", 2)[1];
@@ -79,7 +82,7 @@ class Client {
                 String[] splitGroupAndMessage = userInputParts[1].split(" ");
                 if(splitGroupAndMessage.length < 2){
                     System.out.println("[Client] Invalid recipient: " + splitGroupAndMessage.length);
-                    return false;
+                    return;
                 }
                 String group = userInputParts[1].split(" ", 2)[0];
                 String message = userInputParts[1].split(" ", 2)[1];
@@ -87,17 +90,33 @@ class Client {
                 request = ClientCommand.SEND_GROUP + " " + group.toUpperCase() + " " + message;
                 break;
             case PARTICIPATE:
+                if (userInputParts.length != 2 || userInputParts[1].isEmpty()){
+                    System.out.println("[Client] Error on parameters");
+                    return;
+                }
                 String groupName = userInputParts[1];
                 request = ClientCommand.PARTICIPATE + " " + groupName.toUpperCase();
                 break;
             case HISTORY:
+                if (userInputParts.length != 2 || userInputParts[1].isEmpty()){
+                    System.out.println("[Client] Error on parameters");
+                    return;
+                }
                 String groupNameHistory = userInputParts[1];
                 request = ClientCommand.HISTORY + " " + groupNameHistory.toUpperCase();
                 break;
             case LIST_GROUPS:
+                if (userInputParts.length != 1){
+                    System.out.println("[Client] Error on parameters");
+                    return;
+                }
                 request = ClientCommand.LIST_GROUPS + "";
                 break;
             case LIST_USERS:
+                if (userInputParts.length != 1){
+                    System.out.println("[Client] Error on parameters");
+                    return;
+                }
                 request = ClientCommand.LIST_USERS + "";
                 break;
         }
@@ -107,7 +126,7 @@ class Client {
             out.write(request + END_OF_LINE);
             out.flush();
         }
-        return true;
+        return;
     }
 
     // Returns true if no error were found
