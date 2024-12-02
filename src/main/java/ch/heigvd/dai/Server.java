@@ -13,6 +13,7 @@ public class Server {
     private static final int PORT = 1234;
     private static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>();
     public static String END_OF_LINE = "\n";
+    public static char MESSAGE_MAX_SIZE = 100;
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -95,10 +96,17 @@ public class Server {
             case SEND_PRIVATE -> {
                 String recipient = userInputSplit[1].split(" ", 2)[0];
                 String content = userInputSplit[1].split(" ", 2)[1];
-                if (!User.doesNameExistsInUsers(users, recipient)){
-                    System.out.println("[Server] User is not connected or doesn't exist");
-                    sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+
+                if (content.length() > MESSAGE_MAX_SIZE){
+                    System.out.println("[Server] The message sent is too long");
+                    sendErrorResponse(out, ErrorCode.MESSAGE_TOO_LONG);
                     return;
+                }
+
+                if (!User.doesNameExistsInUsers(users, recipient)){
+                System.out.println("[Server] User is not connected or doesn't exist");
+                sendErrorResponse(out, ErrorCode.USER_NOT_FOUND);
+                return;
                 }
                 int index = User.findUserIndexByName(users, recipient);
                 User sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
@@ -120,6 +128,13 @@ public class Server {
             case SEND_GROUP -> {
                 String group = userInputSplit[1].split(" ", 2)[0];
                 String content = userInputSplit[1].split(" ", 2)[1];
+
+                if (content.length() > MESSAGE_MAX_SIZE){
+                    System.out.println("[Server] The message sent is too long");
+                    sendErrorResponse(out, ErrorCode.MESSAGE_TOO_LONG);
+                    return;
+                }
+
                 User sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                 if(sender == null){
                     System.out.println("[Server] User is not connected or doesn't exist");
