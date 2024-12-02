@@ -88,6 +88,9 @@ public class Server {
                     sendErrorResponse(out, ErrorCode.USER_ALREADY_EXISTS);
                     return;
                 }
+                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort ()) != null) {
+                    User.removeUserFromAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                }
                 User user = new User(name, socket.getInetAddress().getHostAddress() + ":" + socket.getPort(), out);
                 users.add(user);
                 System.out.println("[Server] New client joined " + name);
