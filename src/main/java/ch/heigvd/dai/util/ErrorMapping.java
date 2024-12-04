@@ -1,39 +1,10 @@
-package ch.heigvd.dai;
+package ch.heigvd.dai.util;
 import java.util.List;
 
-enum ClientCommand{
-    JOIN,
-    SEND_PRIVATE,
-    SEND_GROUP,
-    PARTICIPATE,
-    HISTORY,
-    LIST_GROUPS,
-    LIST_USERS
-}
-
-enum ServerCommand{
-    OK,
-    ERROR,
-    RECEIVE_PRIVATE,
-    RECEIVE_GROUP,
-    HISTORY,
-    LIST_GROUPS,
-    LIST_USERS
-}
-
-enum ErrorCode{
-    INVALID,
-    USER_ALREADY_EXISTS,
-    USER_NOT_FOUND,
-    GROUP_NOT_FOUND,
-    MESSAGE_TOO_LONG,
-    USER_NOT_CONNECTED
-}
-
-class ErrorMapping {
-    ClientCommand command;
-    int errorCode;
-    String message;
+public class ErrorMapping {
+    private ClientCommand command;
+    private int errorCode;
+    private String message;
     static final List<ErrorMapping> errorMappings = List.of(
             new ErrorMapping(ClientCommand.JOIN, 1, "The username is already in use."),
             new ErrorMapping(ClientCommand.SEND_PRIVATE, 1, "The recipient is not connected."),
@@ -53,6 +24,10 @@ class ErrorMapping {
         this.command = command;
         this.errorCode = errorCode;
         this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public static ErrorMapping findErrorMapping(ClientCommand command, int errorCode) {

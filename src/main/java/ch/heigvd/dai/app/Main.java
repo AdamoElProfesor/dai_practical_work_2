@@ -1,6 +1,7 @@
-package ch.heigvd.dai;
+package ch.heigvd.dai.app;
 
 import java.io.File;
+
 import picocli.CommandLine;
 
 public class Main {

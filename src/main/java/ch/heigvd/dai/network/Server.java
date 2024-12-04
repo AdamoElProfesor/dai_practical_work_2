@@ -1,4 +1,5 @@
-package ch.heigvd.dai;
+package ch.heigvd.dai.network;
+import ch.heigvd.dai.util.*;
 import picocli.CommandLine;
 
 import java.net.ServerSocket;

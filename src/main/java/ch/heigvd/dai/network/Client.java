@@ -1,5 +1,6 @@
-package ch.heigvd.dai;
+package ch.heigvd.dai.network;
 
+import ch.heigvd.dai.util.*;
 import picocli.CommandLine;
 
 import java.io.*;
@@ -9,7 +10,7 @@ import java.util.concurrent.Callable;
 
 
 @CommandLine.Command(name = "client", description = "Start the client part of the network .")
-class Client implements Callable<Integer> {
+public class Client implements Callable<Integer> {
     public static String END_OF_LINE = "\n";
     static private ClientCommand lastCommand = null;
     public static int MINIMUM_PORT = 1025;
@@ -184,7 +185,7 @@ class Client implements Callable<Integer> {
                     System.out.println("[Server] Unknown error code ");
                     return false;
                 }
-                System.out.println("[Server] " + err.message);
+                System.out.println("[Server] " + err.getMessage());
                 break;
 
             case RECEIVE_PRIVATE:
