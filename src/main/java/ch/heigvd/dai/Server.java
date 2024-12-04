@@ -1,21 +1,37 @@
 package ch.heigvd.dai;
+import picocli.CommandLine;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
+@CommandLine.Command(name = "server", description = "Start the server part of the network game.")
+public class Server implements Callable<Integer> {
 
-public class Server {
-
-    private static final int PORT = 1234;
     private static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>();
     public static String END_OF_LINE = "\n";
     public static char MESSAGE_MAX_SIZE = 100;
+    public static int MINIMUM_PORT = 1025;
+    public static int MAXIMUM_PORT = 65535;
 
-    public static void main(String[] args) {
+    @CommandLine.Option(
+            names = {"-p", "--port"},
+            description = "Port to use (default: ${DEFAULT-VALUE}).",
+            defaultValue = "1234")
+    static protected int PORT;
+
+    @Override
+    public Integer call(){
+        if (PORT < MINIMUM_PORT || PORT > MAXIMUM_PORT) {
+            System.err.println("Error: Port must be between " + MINIMUM_PORT + " " + "and " + MAXIMUM_PORT);
+            return 1;
+        }
+
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("[Server] Listening on port " + PORT);
 
@@ -28,6 +44,7 @@ public class Server {
         } catch (IOException e) {
             System.out.println("[Server] IO exception: " + e);
         }
+        return 0;
     }
 
     static class ClientHandler implements Runnable {
