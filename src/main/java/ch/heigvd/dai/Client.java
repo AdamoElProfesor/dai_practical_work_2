@@ -5,15 +5,34 @@ import picocli.CommandLine;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Callable;
 
 
-class Client {
-    private static final String HOST = "localhost";
-    private static final int PORT = 1234;
+@CommandLine.Command(name = "client", description = "Start the client part of the network .")
+class Client implements Callable<Integer> {
     public static String END_OF_LINE = "\n";
     static private ClientCommand lastCommand = null;
+    public static int MINIMUM_PORT = 1025;
+    public static int MAXIMUM_PORT = 65535;
 
-    public static void main(String[] args) {
+    @CommandLine.Option(
+            names = {"-p", "--port"},
+            description = "Port to use (default: ${DEFAULT-VALUE}).",
+            defaultValue = "1234")
+    static protected int PORT;
+
+    @CommandLine.Option(
+            names = {"-h", "--host"},
+            description = "Host to use(default: ${DEFAULT-VALUE}).",
+            defaultValue = "localhost")
+    static protected String HOST;
+
+    @Override
+    public Integer call(){
+        if (PORT < MINIMUM_PORT || PORT > MAXIMUM_PORT) {
+            System.err.println("Error: Port must be between " + MINIMUM_PORT + " " + "and " + MAXIMUM_PORT);
+            return 1;
+        }
         System.out.println("[Client] Connecting to " + HOST + ":" + PORT + "...");
 
         try (Socket socket = new Socket(HOST, PORT);
@@ -45,6 +64,7 @@ class Client {
         } catch (IOException e) {
             System.out.println("[Client] IO exception: " + e);
         }
+        return 0;
     }
 
     // Returns true if no errors were found

@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
-@CommandLine.Command(name = "server", description = "Start the server part of the network game.")
+@CommandLine.Command(name = "server", description = "Start the server part of the networkd.")
 public class Server implements Callable<Integer> {
 
     private static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>();
