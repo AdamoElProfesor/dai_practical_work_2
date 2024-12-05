@@ -14,17 +14,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @CommandLine.Command(name = "server", description = "Start the server part of the networkd.")
 public class Server implements Callable<Integer> {
 
-    private static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>();
-    public static String END_OF_LINE = "\n";
-    public static char MESSAGE_MAX_SIZE = 100;
-    public static int MINIMUM_PORT = 1025;
-    public static int MAXIMUM_PORT = 65535;
+    private CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>();
+    public  String END_OF_LINE = "\n";
+    public  char MESSAGE_MAX_SIZE = 100;
+    public  int MINIMUM_PORT = 1025;
+    public  int MAXIMUM_PORT = 65535;
 
     @CommandLine.Option(
             names = {"-p", "--port"},
             description = "Port to use (default: ${DEFAULT-VALUE}).",
             defaultValue = "1234")
-    static protected int PORT;
+    protected int PORT;
 
     @Override
     public Integer call(){
@@ -48,7 +48,7 @@ public class Server implements Callable<Integer> {
         return 0;
     }
 
-    static class ClientHandler implements Runnable {
+    class ClientHandler implements Runnable {
 
         private final Socket socket;
 
@@ -87,7 +87,7 @@ public class Server implements Callable<Integer> {
     }
 
 
-    private static void processClientInput(String input, Socket socket, BufferedWriter out) throws IOException {
+    private void processClientInput(String input, Socket socket, BufferedWriter out) throws IOException {
         String[] userInputSplit = input.split(" ", 2);
 
         ClientCommand command = null;
@@ -98,209 +98,223 @@ public class Server implements Callable<Integer> {
             return;
         }
 
-        int errorCode = 0;
+        /* Main logic when processing the userInput */
         switch (command) {
-            case JOIN -> {
-                String name = userInputSplit[1];
-                if(User.doesNameExistsInUsers(users, name)) {
-                    errorCode = 1;
-                    System.out.println("[Server] Name already exists");
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-                if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort ()) != null) {
-                    User.removeUserFromAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-                }
-                User user = new User(name, socket.getInetAddress().getHostAddress() + ":" + socket.getPort(), out);
-                users.add(user);
-                System.out.println("[Server] New client joined " + name);
-                sendOkResponse(out);
-            }
-            case SEND_PRIVATE -> {
-                String recipient = userInputSplit[1].split(" ", 2)[0];
-                String content = userInputSplit[1].split(" ", 2)[1];
-
-                // Check if sender has a username
-                User sender;
-                if((sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
-                    System.out.println("[Server] Sender does not exist");
-                    errorCode = 3;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                if (content.length() > MESSAGE_MAX_SIZE){
-                    System.out.println("[Server] The message sent is too long");
-                    errorCode = 2;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                /* This check is redundant with the bottom one ?*/
-                if (!User.doesNameExistsInUsers(users, recipient)){
-                    System.out.println("[Server] User is not connected or doesn't exist");
-                    errorCode = 1;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                /* Could be simplified by returning user ?*/
-                int index = User.findUserIndexByName(users, recipient);
-
-                if(index == -1) { // User is not found
-                    errorCode = 1;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-                User user = users.get(index);
-                user.getOutput().write(ServerCommand.RECEIVE_PRIVATE + " " + sender.getName() + " " + content + END_OF_LINE);
-                user.getOutput().flush();
-                sendOkResponse(out);
-                break;
-            }
-            case SEND_GROUP -> {
-                String group = userInputSplit[1].split(" ", 2)[0];
-                String content = userInputSplit[1].split(" ", 2)[1];
-
-                // Check if sender has a username
-                User sender;
-                if((sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
-                    System.out.println("[Server] Sender does not exist");
-                    errorCode = 3;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                if (content.length() > MESSAGE_MAX_SIZE){
-                    System.out.println("[Server] The message sent is too long");
-                    errorCode = 2;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                if(!User.isValidGroupName(group)) {
-                    System.out.println("[Server] Group doesn't exist");
-                    errorCode = 1;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                if (!sender.isInGroup(group)){
-                    System.out.println("[Server] User is not in specified group");
-                    errorCode = 4;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                User[] usersToSendMessage = User.findAllUsersByGroup(users, group);
-
-                for(User user : usersToSendMessage){
-                    if (user == sender) continue;
-                    user.getOutput().write(ServerCommand.RECEIVE_GROUP + " " + group + " " + sender.getName() + " " + content + END_OF_LINE);
-                    user.getOutput().flush();
-                }
-                String filePath = group.toLowerCase() + ".txt";
-
-                try(BufferedWriter groupWriter = new BufferedWriter(new FileWriter(filePath, true))){
-                    groupWriter.write(sender.getName() + " " + content + END_OF_LINE);
-                    groupWriter.flush();
-                }catch (IOException e){
-                    System.out.println("[Server] IO exception: " + e);
-                }
-                System.out.println("OUT");
-                sendOkResponse(out);
-                break;
-            }
-            case PARTICIPATE -> {
-                String groupName = userInputSplit[1];
-
-                // Check if sender has a username
-                User user;
-                if((user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
-                    System.out.println("[Server] Sender does not exist");
-                    errorCode = 2;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                if (!User.isValidGroupName(groupName)) {
-                    System.out.println("[Server] Group doesn't exist");
-                    errorCode = 1;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                user.addGroupToUser(groupName);
-                System.out.println("[Server] " + user.getName() + " joined " + groupName);
-                sendOkResponse(out);
-                break;
-            }
-            case HISTORY -> {
-                String groupName = userInputSplit[1];
-
-                // Check if sender has a username
-                User user;
-                if((user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
-                    System.out.println("[Server] Sender does not exist");
-                    errorCode = 2;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                if (!User.isValidGroupName(groupName)) {
-                    System.out.println("[Server] Group doesn't exist");
-                    errorCode = 3; // NOT DEFINED IN THE APP PROTOCOL
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                if (!user.isInGroup(groupName)) {
-                    System.out.println("[Server] User is not in specified group");
-                    errorCode = 1;
-                    sendErrorResponse(out, errorCode);
-                    return;
-                }
-
-                StringBuilder content = new StringBuilder();
-                try (BufferedReader reader = new BufferedReader(new FileReader(groupName + ".txt"))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if(content.length() > 1){
-                            content.append("|");
-                        }
-                        content.append(line);
-                    }
-                } catch (IOException e) {
-                    System.err.println("An error occurred: " + e.getMessage());
-                }
-                out.write(ServerCommand.HISTORY + " " + content + END_OF_LINE);
-                out.flush();
-            }
-            case LIST_GROUPS -> {
-                String[] groups = User.getExistingGroups();
-                StringBuilder response = new StringBuilder();
-                for (String group : groups) {
-                    response.append(group).append(" ");
-                }
-                out.write(ServerCommand.LIST_GROUPS + " " + response + END_OF_LINE);
-                out.flush();
-            }
-            case LIST_USERS -> {
-                StringBuilder response = new StringBuilder();
-                for (User user : users) {
-                    response.append(user.getName()).append(" ");
-                }
-                out.write(ServerCommand.LIST_USERS + " " + response + END_OF_LINE);
-                out.flush();
-            }
+            case JOIN -> processJoin(userInputSplit, socket, out);
+            case SEND_PRIVATE -> processSendPrivate(userInputSplit, socket, out);
+            case SEND_GROUP -> processSendGroup(userInputSplit, socket, out);
+            case PARTICIPATE -> processParticipate(userInputSplit, socket, out);
+            case HISTORY -> processHistory(userInputSplit, socket, out);
+            case LIST_GROUPS -> processListGroups(out);
+            case LIST_USERS -> processListUsers(out);
         }
     }
-    private static void sendOkResponse (BufferedWriter out) throws IOException {
+
+    private void processJoin(String[] input,Socket socket, BufferedWriter out) throws IOException {
+        String name = input[1];
+        int errorCode = 0;
+
+        /* Duplicate usernames */
+        if(User.findUserByName(users, name) != null) {
+            errorCode = 1;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        // If username already has an account, remove it
+        if(User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort ()) != null) {
+            User.removeUserFromAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+        }
+
+        //Add new username
+        User user = new User(name, socket.getInetAddress().getHostAddress() + ":" + socket.getPort(), out);
+        users.add(user);
+        System.out.println("[Server] New client joined " + name);
+        sendOkResponse(out);
+    }
+
+    private void processSendPrivate(String[] input,Socket socket, BufferedWriter out) throws IOException {
+        String recipient = input[1].split(" ", 2)[0];
+        String content = input[1].split(" ", 2)[1];
+
+        int errorCode = 0;
+
+        // Check if sender is found
+        User sender;
+        if((sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
+            errorCode = 3;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        // Message too long
+        if (content.length() > MESSAGE_MAX_SIZE){
+            errorCode = 2;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        // Check if recipient is found
+        User user;
+        if((user = User.findUserByName(users, recipient)) == null) {
+            errorCode = 1;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+        user.getOutput().write(ServerCommand.RECEIVE_PRIVATE + " " + sender.getName() + " " + content + END_OF_LINE);
+        user.getOutput().flush();
+        sendOkResponse(out);
+    }
+
+    private void processSendGroup(String[] input,Socket socket, BufferedWriter out) throws IOException {
+        String group = input[1].split(" ", 2)[0];
+        String content = input[1].split(" ", 2)[1];
+
+        int errorCode = 0;
+
+        // Check if sender has a username
+        User sender;
+        if((sender = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
+            errorCode = 3;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        // Check if message too long
+        if (content.length() > MESSAGE_MAX_SIZE){
+            errorCode = 2;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        // Check if valid group name
+        if(!User.isValidGroupName(group)) {
+            errorCode = 1;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        // Check if user in the specific group
+        if (!sender.isInGroup(group)){
+            errorCode = 4;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        User[] usersToSendMessage = User.findAllUsersByGroup(users, group);
+
+        // Send message to all participants of the group
+        for(User user : usersToSendMessage){
+            if (user == sender) continue;
+            user.getOutput().write(ServerCommand.RECEIVE_GROUP + " " + group + " " + sender.getName() + " " + content + END_OF_LINE);
+            user.getOutput().flush();
+        }
+
+        // Writes message in the txt file
+        String filePath = group.toLowerCase() + ".txt";
+        try(BufferedWriter groupWriter = new BufferedWriter(new FileWriter(filePath, true))){
+            groupWriter.write(sender.getName() + " " + content + END_OF_LINE);
+            groupWriter.flush();
+        }catch (IOException e){
+            System.out.println("[Server] IO exception: " + e);
+        }
+        System.out.println("OUT");
+        sendOkResponse(out);
+    }
+
+    private void processParticipate(String[] input,Socket socket, BufferedWriter out) throws IOException {
+        String groupName = input[1];
+
+        int errorCode = 0;
+
+        // Check if sender exists
+        User user;
+        if((user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
+            errorCode = 2;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        // Check if group name is valid
+        if (!User.isValidGroupName(groupName)) {
+            errorCode = 1;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        user.addGroupToUser(groupName);
+        System.out.println("[Server] " + user.getName() + " joined " + groupName);
+        sendOkResponse(out);
+    }
+
+    private void processHistory(String[] input,Socket socket, BufferedWriter out) throws IOException {
+        String groupName = input[1];
+
+        int errorCode = 0;
+
+        // Check if sender exists
+        User user;
+        if((user = User.findUserByAddress(users, socket.getInetAddress().getHostAddress() + ":" + socket.getPort())) == null){
+            errorCode = 2;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        if (!User.isValidGroupName(groupName)) {
+            errorCode = 3; // NOT DEFINED IN THE APP PROTOCOL
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        if (!user.isInGroup(groupName)) {
+            errorCode = 1;
+            sendErrorResponse(out, errorCode);
+            return;
+        }
+
+        // Retrieves all the content in the text file. ("|" as a separator)
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(groupName + ".txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if(content.length() > 1){
+                    content.append("|");
+                }
+                content.append(line);
+            }
+        } catch (IOException e) {
+            System.err.println("An error occurred while retrieving text content: " + e.getMessage());
+        }
+        out.write(ServerCommand.HISTORY + " " + content + END_OF_LINE);
+        out.flush();
+    }
+
+    private void processListGroups(BufferedWriter out) throws IOException {
+        String[] groups = User.getExistingGroups();
+        StringBuilder response = new StringBuilder();
+        for (String group : groups) {
+            response.append(group).append(" ");
+        }
+        out.write(ServerCommand.LIST_GROUPS + " " + response + END_OF_LINE);
+        out.flush();
+    }
+
+    private void processListUsers(BufferedWriter out) throws IOException {
+        StringBuilder response = new StringBuilder();
+        for (User user : users) {
+            response.append(user.getName()).append(" ");
+        }
+        out.write(ServerCommand.LIST_USERS + " " + response + END_OF_LINE);
+        out.flush();
+    }
+
+
+    private void sendOkResponse (BufferedWriter out) throws IOException {
         out.write("OK" + END_OF_LINE);
         out.flush();
     }
 
-    private static void sendErrorResponse(BufferedWriter out, int code) throws IOException {
+    private void sendErrorResponse(BufferedWriter out, int code) throws IOException {
         out.write("ERROR " + code + END_OF_LINE);
         out.flush();
     }
@@ -312,7 +326,7 @@ class User{
     private String address; // Maybe not useful
     private BufferedWriter output;
     private ArrayList<String> groups;
-    public static final String[] existingGroups = {"HEIG-VD", "SPORT", "VOITURE"};
+    private static final String[] existingGroups = {"HEIG-VD", "SPORT", "VOITURE"};
 
     public User(String name, String address, BufferedWriter output) {
         this.name = name;
@@ -361,27 +375,18 @@ class User{
         return usersInGroup.toArray(new User[0]);
     }
 
-    static public boolean doesNameExistsInUsers(CopyOnWriteArrayList<User> users, String name) {
-        for (User user : users) {
-            if (user.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     static public void removeUserFromAddress(CopyOnWriteArrayList<User> users, String address) {
         users.removeIf(user -> user.getAddress().equals(address));
     }
 
     /* returns -1 when user is not found*/
-    static public int findUserIndexByName(CopyOnWriteArrayList<User> users, String name) {
+    static public User findUserByName(CopyOnWriteArrayList<User> users, String name) {
         for (User user : users) {
             if (user.getName().equals(name)) {
-                return users.indexOf(user);
+                return user;
             }
         }
-        return -1;
+        return null;
     }
     static public User findUserByAddress(CopyOnWriteArrayList<User> users, String address) {
         for (User user : users) {

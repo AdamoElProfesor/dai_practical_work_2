@@ -11,22 +11,22 @@ import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "client", description = "Start the client part of the network .")
 public class Client implements Callable<Integer> {
-    public static String END_OF_LINE = "\n";
-    static private ClientCommand lastCommand = null;
-    public static int MINIMUM_PORT = 1025;
-    public static int MAXIMUM_PORT = 65535;
+    public String END_OF_LINE = "\n";
+    private ClientCommand lastCommand = null;
+    public int MINIMUM_PORT = 1025;
+    public int MAXIMUM_PORT = 65535;
 
     @CommandLine.Option(
             names = {"-p", "--port"},
             description = "Port to use (default: ${DEFAULT-VALUE}).",
             defaultValue = "1234")
-    static protected int PORT;
+    protected int PORT;
 
     @CommandLine.Option(
             names = {"-h", "--host"},
             description = "Host to use(default: ${DEFAULT-VALUE}).",
             defaultValue = "localhost")
-    static protected String HOST;
+    protected String HOST;
 
     @Override
     public Integer call(){
@@ -34,6 +34,7 @@ public class Client implements Callable<Integer> {
             System.err.println("Error: Port must be between " + MINIMUM_PORT + " " + "and " + MAXIMUM_PORT);
             return 1;
         }
+
         System.out.println("[Client] Connecting to " + HOST + ":" + PORT + "...");
 
         try (Socket socket = new Socket(HOST, PORT);
@@ -70,7 +71,7 @@ public class Client implements Callable<Integer> {
 
     // Returns true if no errors were found
     // Returns false if the client input was invalid / unknown
-    private static void processClientInput(String input, BufferedWriter out) throws IOException {
+    private void processClientInput(String input, BufferedWriter out) throws IOException {
         String[] userInputParts = input.split(" ", 2);
         ClientCommand command = null;
         try{
@@ -79,85 +80,88 @@ public class Client implements Callable<Integer> {
             System.out.println("[Client] Invalid command: " + input);
             return;
         }
-
         lastCommand = command;
 
-        String request = null;
-
-        switch (command){
-            case JOIN:
-                if (userInputParts.length != 2 || userInputParts[1].isEmpty()){
-                    System.out.println("[Client] Error on parameters");
-                    return;
-                }
-                String name = userInputParts[1];
-                request = ClientCommand.JOIN + " " + name;
-                break;
-            case SEND_PRIVATE:
-                String[] splitRecipientAndMessage = userInputParts[1].split(" ");
-                if(splitRecipientAndMessage.length < 2){
-                    System.out.println("[Client] Invalid recipient: " + splitRecipientAndMessage.length);
-                    return;
-                }
-                String recipient = userInputParts[1].split(" ", 2)[0];
-                String content = userInputParts[1].split(" ", 2)[1];
-
-                request = ClientCommand.SEND_PRIVATE + " " + recipient + " " + content;
-                break;
-            case SEND_GROUP:
-                String[] splitGroupAndMessage = userInputParts[1].split(" ");
-                if(splitGroupAndMessage.length < 2){
-                    System.out.println("[Client] Invalid recipient: " + splitGroupAndMessage.length);
-                    return;
-                }
-                String group = userInputParts[1].split(" ", 2)[0];
-                String message = userInputParts[1].split(" ", 2)[1];
-
-                request = ClientCommand.SEND_GROUP + " " + group.toUpperCase() + " " + message;
-                break;
-            case PARTICIPATE:
-                if (userInputParts.length != 2 || userInputParts[1].isEmpty()){
-                    System.out.println("[Client] Error on parameters");
-                    return;
-                }
-                String groupName = userInputParts[1];
-                request = ClientCommand.PARTICIPATE + " " + groupName.toUpperCase();
-                break;
-            case HISTORY:
-                if (userInputParts.length != 2 || userInputParts[1].isEmpty()){
-                    System.out.println("[Client] Error on parameters");
-                    return;
-                }
-                String groupNameHistory = userInputParts[1];
-                request = ClientCommand.HISTORY + " " + groupNameHistory.toUpperCase();
-                break;
-            case LIST_GROUPS:
-                if (userInputParts.length != 1){
-                    System.out.println("[Client] Error on parameters");
-                    return;
-                }
-                request = ClientCommand.LIST_GROUPS + "";
-                break;
-            case LIST_USERS:
-                if (userInputParts.length != 1){
-                    System.out.println("[Client] Error on parameters");
-                    return;
-                }
-                request = ClientCommand.LIST_USERS + "";
-                break;
-        }
+        String request = switch (command) {
+            case JOIN -> requestJoin(userInputParts);
+            case SEND_PRIVATE -> requestSendPrivate(userInputParts);
+            case SEND_GROUP -> requestSendGroup(userInputParts);
+            case PARTICIPATE -> requestParticipate(userInputParts);
+            case HISTORY -> requestHistory(userInputParts);
+            case LIST_GROUPS -> requestListGroups(userInputParts);
+            case LIST_USERS -> requestListUsers(userInputParts);
+        };
 
         //Useless condition for the moment
         if (request != null) {
             out.write(request + END_OF_LINE);
             out.flush();
         }
-        return;
+    }
+
+    private String requestJoin(String[] userInput){
+        if (userInput.length != 2 || userInput[1].isEmpty()){
+            System.out.println("[Client] Error on parameters");
+            return null;
+        }
+        String name = userInput[1];
+        return ClientCommand.JOIN + " " + name;
+    }
+
+    private String requestSendPrivate(String[] userInput){
+        if(userInput[1].split(" ").length < 2){
+            System.out.println("[Client] Error when sending message");
+            return null;
+        }
+
+        String recipient = userInput[1].split(" ", 2)[0];
+        String content = userInput[1].split(" ", 2)[1];
+
+        return ClientCommand.SEND_PRIVATE + " " + recipient + " " + content;
+    }
+    private String requestSendGroup(String[] userInput){
+        if(userInput[1].split(" ").length < 2){
+            System.out.println("[Client] Error when sending message");
+            return null;
+        }
+        String group = userInput[1].split(" ", 2)[0];
+        String message = userInput[1].split(" ", 2)[1];
+        return ClientCommand.SEND_GROUP + " " + group.toUpperCase() + " " + message;
+    }
+    private String requestParticipate(String[] userInput){
+        if (userInput.length != 2 || userInput[1].isEmpty()){
+            System.out.println("[Client] Error on parameters");
+            return null;
+        }
+        String groupName = userInput[1];
+        return ClientCommand.PARTICIPATE + " " + groupName.toUpperCase();
+    }
+    private String requestHistory(String[] userInput){
+        if (userInput.length != 2 || userInput[1].isEmpty()){
+            System.out.println("[Client] Error on parameters");
+            return null;
+        }
+        String groupNameHistory = userInput[1];
+        return ClientCommand.HISTORY + " " + groupNameHistory.toUpperCase();
+    }
+    private String requestListGroups(String[] userInput){
+        if (userInput.length != 1){
+            System.out.println("[Client] Error on parameters");
+            return null;
+        }
+         return ClientCommand.LIST_GROUPS + "";
+    }
+    private String requestListUsers(String[] userInput){
+        if (userInput.length != 1){
+            System.out.println("[Client] Error on parameters");
+            return null;
+        }
+        return ClientCommand.LIST_USERS + "";
     }
 
     // Returns true if no error were found
     // Returns false if there was no response
-    private static boolean processServerResponse(String response, Socket socket) throws IOException {
+    private boolean processServerResponse(String response, Socket socket) throws IOException {
         //if response == null the server has disconnected
         if (response == null) {
             socket.close();
@@ -172,66 +176,82 @@ public class Client implements Callable<Integer> {
             return false;
         }
 
-        String sender;
-        String message;
-
         switch (command){
-            case OK:
-                System.out.println("[Server] " + response);
-                break;
-            case ERROR:
-                ErrorMapping err;
-                if((err = ErrorMapping.findErrorMapping(lastCommand, Integer.parseInt(responseSplit[1])))== null){
-                    System.out.println("[Server] Unknown error code ");
-                    return false;
-                }
-                System.out.println("[Server] " + err.getMessage());
-                break;
-
-            case RECEIVE_PRIVATE:
-                String[] splitSenderAndMessage = responseSplit[1].split(" ", 2);
-                if(splitSenderAndMessage.length < 2){return false;}
-                sender = splitSenderAndMessage[0];
-                message = splitSenderAndMessage[1];
-                System.out.println("[" + sender +  "] " + message);
-                break;
-            case RECEIVE_GROUP:
-                String[] splitGroupSenderMessage = responseSplit[1].split(" ", 3);
-                if(splitGroupSenderMessage.length < 3){return false;}
-                String group = splitGroupSenderMessage[0];
-                sender = splitGroupSenderMessage[1];
-                message = splitGroupSenderMessage[2];
-                System.out.println("[" + group +  ":" + sender + "] " + message);
-                break;
-            case HISTORY:
-                String[] messages = responseSplit[1].split("\\|"); // "|" is the message delimiter
-                for (String messageHistory : messages){
-                    System.out.println(" - " + messageHistory);
-                }
-                break;
-            case LIST_GROUPS:
-                String[] groups = responseSplit[1].split(" ");
-                System.out.println();
-                for (String currentGroup : groups){
-                    System.out.println(" - " + currentGroup);
-                }
-                break;
-            case LIST_USERS:
-                String[] users = responseSplit[1].split(" ");
-                System.out.println();
-                for (String currentUser : users){
-                    System.out.println(" - " + currentUser);
-                }
-                break;
+            case OK ->responseOk();
+            case ERROR -> responseError(responseSplit);
+            case RECEIVE_PRIVATE -> responseReceivePrivate(responseSplit);
+            case RECEIVE_GROUP -> responseReceiveGroup(responseSplit);
+            case HISTORY -> responseHistory(responseSplit);
+            case LIST_GROUPS, LIST_USERS -> responseList(responseSplit); // when the response is a list of something
         }
         System.out.print("> ");
         return true;
     }
 
-    private static void getErrorFromCode(int code) {
+    private void responseOk(){
+        switch (lastCommand){
+            case JOIN: System.out.println("[Client] You successfully joined"); break;
+            case SEND_PRIVATE, SEND_GROUP: System.out.println("[Client] Message successfully sent"); break;
+            case PARTICIPATE: System.out.println("[Client] You successfully joined the group"); break;
+        }
     }
 
-    static class ServerListener implements Runnable {
+    private void responseError(String[] response){
+        ErrorMapping err;
+        if((err = ErrorMapping.findErrorMapping(lastCommand, Integer.parseInt(response[1])))== null){
+            System.out.println("[Server] Unknown error code ");
+            return;
+        }
+        System.out.println("[Server] " + err.getMessage());
+    }
+
+    private void responseReceivePrivate(String[] response){
+        String sender;
+        String message;
+
+        if(response[1].split(" ", 2).length < 2){
+            System.out.println("[Client] Couldn't properly receive private message");
+            return;
+        }
+        sender = response[1].split(" ", 2)[0];
+        message = response[1].split(" ", 2)[1];
+
+        System.out.println("[" + sender +  "] " + message);
+    }
+
+    private void responseReceiveGroup(String[] response){
+        String sender;
+        String message;
+
+        if(response[1].split(" ", 3).length < 3){
+            System.out.println("[Client] Couldn't properly receive group message");
+            return;
+        }
+        String group = response[1].split(" ", 3)[0];
+        sender = response[1].split(" ", 3)[1];
+        message = response[1].split(" ", 3)[2];
+
+        System.out.println("[" + group +  ":" + sender + "] " + message);
+    }
+
+    private void responseHistory(String[] response){
+        String[] messages = response[1].split("\\|"); // "|" is the message delimiter
+        for (String messageHistory : messages){
+            System.out.println(" - " + messageHistory);
+        }
+    }
+
+    private void responseList(String[] response){
+        String[] list = response[1].split(" ");
+        System.out.println();
+        for (String item : list){
+            System.out.println(" - " + item);
+        }
+    }
+
+
+
+    class ServerListener implements Runnable {
         private Socket socket;
         public ServerListener(Socket socket) {
             this.socket = socket;
