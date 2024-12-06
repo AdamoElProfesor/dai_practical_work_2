@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Client" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="ch.heigvd.dai.Client" />
+    <option name="MAIN_CLASS_NAME" value="ch.heigvd.dai.network.Client" />
     <module name="java-intellij-idea-and-maven" />
     <method v="2">
       <option name="Make" enabled="true" />

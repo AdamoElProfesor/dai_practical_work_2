@@ -1,5 +1,7 @@
-package ch.heigvd.dai;
+package ch.heigvd.dai.app;
 
+import ch.heigvd.dai.network.Client;
+import ch.heigvd.dai.network.Server;
 import picocli.CommandLine;
 
 @CommandLine.Command(
