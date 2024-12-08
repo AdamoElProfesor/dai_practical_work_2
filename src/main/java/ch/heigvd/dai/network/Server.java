@@ -88,6 +88,7 @@ public class Server implements Callable<Integer> {
 
 
     private void processClientInput(String input, Socket socket, BufferedWriter out) throws IOException {
+        if (input == null) return;
         String[] userInputSplit = input.split(" ", 2);
 
         ClientCommand command = null;

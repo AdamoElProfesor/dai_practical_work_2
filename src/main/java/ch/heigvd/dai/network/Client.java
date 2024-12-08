@@ -72,6 +72,7 @@ public class Client implements Callable<Integer> {
     // Returns true if no errors were found
     // Returns false if the client input was invalid / unknown
     private void processClientInput(String input, BufferedWriter out) throws IOException {
+        if (input == null) return;
         String[] userInputParts = input.split(" ", 2);
         ClientCommand command = null;
         try{
