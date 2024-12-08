@@ -157,16 +157,16 @@ The client requests the chat history of a specific group.
 - `<group>`: The name of the group whose history is being requested.
 
 **Server Output**
-- `HISTORY <message1> <message2> ...`: A list of past messages from the group, in chronological order.  
-  Each message is formatted as `<sender>: <text>`.  
+- `HISTORY <message1> <message2> ...`: A list of past messages from the group, in chronological order.   
+  Each message is formatted as `<sender>: <text>`. (messages are delimited with the "|" character)  
   For example:
-    - `axel salut mec`
-    - `adam ça va et toi?`
-    - `axel ça va aussi bien merci`
-    - `ERROR <code>`: An error occurred while retrieving the chat history.
-        - **Error Codes**:
-            - `1`: The client is not a member of the specified group.
-            - `2`: The client has not connected to the server using `JOIN`.
+    - `¨axel salut mec|adam ça va et toi?|axel ça va aussi bien merci`
+  
+
+- `ERROR <code>`: An error occurred while retrieving the chat history.
+    - **Error Codes**:
+        - `1`: The client is not a member of the specified group.
+        - `2`: The client has not connected to the server using `JOIN`.
 ---
 
 ### List Available Groups
