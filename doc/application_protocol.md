@@ -160,7 +160,7 @@ The client requests the chat history of a specific group.
 - `HISTORY <message1> <message2> ...`: A list of past messages from the group, in chronological order.   
   Each message is formatted as `<sender>: <text>`. (messages are delimited with the "|" character)  
   For example:
-    - `¨axel salut mec|adam ça va et toi?|axel ça va aussi bien merci`
+    - `axel salut mec|adam ça va et toi?|axel ça va aussi bien merci`
   
 
 - `ERROR <code>`: An error occurred while retrieving the chat history.

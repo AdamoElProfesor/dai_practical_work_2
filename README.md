@@ -75,8 +75,8 @@ Once the server is running and the client is connected, users can interact with 
   ```  
 
 These examples allow users and developers to understand how to interact with the network application without needing to run it locally.
-
-If you want to see all the possible commands, you can check out the application protocol in /doc/application_protocol.md
+## Find all commands
+If you want to see all the possible commands, you can check out the application protocol in [doc/application_protocol.md](doc/application_protocol.md)
 # How to Run the App Using Docker
 
 ## Prerequisites
